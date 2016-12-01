@@ -1,4 +1,4 @@
-import sys,pandas,nltk,re,math,time
+import sys,pandas,nltk,re,math,time, tqdm
 from nltk.tokenize import TweetTokenizer
 from nltk.tokenize import MWETokenizer
 from nltk.corpus import stopwords
@@ -11,40 +11,16 @@ REMOVABLES = ['rt'] #'the', 'my','i','we','me','you']
 STOPWORDS = set(stopwords.words('english'))
 EMOTICONS = [(':)','smile'), ('(:','smile'), ('):','frown'), (':(','frown'), (':D','biggrin'), (':\'(','crying'), (':\'‑(','crying'), (')\':','crying'), (')-\':','crying'), ('D:','sadness'), (':O','surprise'), (':o','shock') ]
 
-##Progress Bar from user @Greenstick on StackOverflow, modified from @Vladimir Ignatyev's progress bar
-def printProgress (iteration, total, prefix = '', suffix = '', decimals = 1, barLength = 100):
-    """
-    Call in a loop to create terminal progress bar
-    @params:
-        iteration   - Required  : current iteration (Int)
-        total       - Required  : total iterations (Int)
-        prefix      - Optional  : prefix string (Str)
-        suffix      - Optional  : suffix string (Str)
-        decimals    - Optional  : positive number of decimals in percent complete (Int)
-        barLength   - Optional  : character length of bar (Int)
-    """
-    formatStr = "{0:." + str(decimals) + "f}"
-    percent = formatStr.format(100 * (iteration / float(total)))
-    filledLength = int(round(barLength * iteration / float(total)))
-    bar = '█' * filledLength + '-' * (barLength - filledLength)
-    sys.stdout.write('\r%s |%s| %s%s %s' % (prefix, bar, percent, '%', suffix)),
-    if iteration == total:
-        sys.stdout.write('\n')
-    sys.stdout.flush()
-
 
 def preprocess(pdata):
     print('Preprocessing...')
     
     dataframe = pandas.read_pickle(pdata) #get pickled dataset from location passed in as a parameter to the function
     preprocessed_dataframe = pandas.DataFrame(columns=['date','text','retweets','favorites','followers']).set_index('date')
-    print(dataframe)
     
-    i = 0
-    
-    printProgress(i, len(dataframe),prefix = 'Progress:', suffix='Complete')
     ##ITERATE THROUGH EVERY TWEET IN THE DATAFRAME
-    for it, tweet in dataframe.iterrows():
+    for it, tweet in tqdm.tqdm(dataframe.iterrows()):
+        
         text = tweet[0]
         retweets = tweet[1]
         favorites = tweet[2]
@@ -63,7 +39,8 @@ def preprocess(pdata):
         #text = text+"gooooood, jeeeeezz" #TEST for repeated letter reduction
         
         text = text.replace('#','') #remove hashes
-        text = text.replace('%', 'percent')
+        text = text.replace('%', 'percent') #replace % symbol with 'percent'
+        
         ##Iterate though listed emoticons and their corrisponding emotions, replace symbol with emotion word
         for symbol, emotion  in EMOTICONS:
             text = text.replace(symbol, emotion)
@@ -85,8 +62,6 @@ def preprocess(pdata):
             'followers':followers
         }, columns=['date','text','retweets','favorites','followers']).set_index('date')
         preprocessed_dataframe = preprocessed_dataframe.append(temp)
-        i+=1
-        printProgress(i, len(dataframe), prefix='Progress:', suffix='Complete')
         
     #print(preprocessed_dataframe) #printout of the preprocessed dataframe
     preprocessed_dataframe.to_pickle('preprocessed_tweets_s'+str(int(len(dataframe)/100))+'.p') #create a pickled dataframe with a semi-unique identifier (based on the number of rows in the dataframe)
