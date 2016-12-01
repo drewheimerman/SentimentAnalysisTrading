@@ -31,6 +31,12 @@ def main():
     global_step = tf.Variable(0, name='global_step', trainable=False)
     train_op = optimizer.minimize(loss, global_step=global_step)
 
+
+
+
+
+
+
 def generate_layer_input(input_layer, input_length, output_length):
     """
     Generate a layer for a normal NN of type 'tensor_type'
@@ -79,3 +85,6 @@ def generate_network(x, sizes=SIZE_PER_HIDDENLAYER, tensor_type=tf.sigmoid):
         layer = generate_layer_input(prev_layer, sizes[-1], OUTPUT_VECTOR_LENGTH)
 
     return layer
+
+if __name__ == '__main__':
+    main()
